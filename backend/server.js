@@ -18,6 +18,15 @@ const app = express();
  */
 const todos = [];
 
+// ===== Helper: Generate RFC4122 v4-compliant UUID =====
+function uuidv4() {
+  // https://stackoverflow.com/questions/105034/how-to-create-guid-uuid
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 // ===== Global Express middlewares =====
 app.use(cors());
 app.use(express.json());
@@ -47,6 +56,42 @@ app.get('/', (req, res) => {
 app.get('/todos', (req, res) => {
   // Respond with a deep copy to avoid accidental mutations from callers
   res.json(todos.map(todo => ({ ...todo })));
+});
+
+// ===== POST /todos endpoint =====
+// Creates a new todo.
+app.post('/todos', (req, res) => {
+  const { title, description } = req.body || {};
+
+  // Validate title: must be present, string, non-empty after trimming
+  if (
+    typeof title !== 'string' ||
+    title.trim().length === 0
+  ) {
+    return res.status(400).json({ error: 'Missing or empty required field: title' });
+  }
+
+  // description is optional; if present, ensure it's a string
+  let descStr = '';
+  if (typeof description === 'undefined' || description === null) {
+    descStr = '';
+  } else if (typeof description === 'string') {
+    descStr = description;
+  } else {
+    return res.status(400).json({ error: 'If provided, description must be a string' });
+  }
+
+  const now = new Date();
+  const newTodo = {
+    id: uuidv4(),
+    title: title.trim(),
+    description: descStr,
+    completed: false,
+    createdAt: now.toISOString()
+  };
+  todos.push(newTodo);
+  // Respond with created resource
+  res.status(201).json({ ...newTodo });
 });
 
 // ===== Attach global error handler (always last) =====
