@@ -22,7 +22,25 @@ PORT=4000 npm start
 ## Endpoints
 
 - `GET /` — returns `{ status: 'ok', message: ... }` (server health check)
-- (Other todo endpoints to be added next)
+- `GET /todos` — returns an array of all todos
+- `POST /todos` — create a new todo, with JSON body `{ title: string, description?: string }`
+    - Returns the created todo (201), or 400 on invalid input
+
+## Example POST /todos Usage
+
+Create a todo with curl:
+
+```sh
+curl -X POST http://localhost:3000/todos \
+  -H 'Content-Type: application/json' \
+  -d '{"title": "My first todo"}'
+```
+
+Invalid/no title returns 400:
+
+```sh
+curl -X POST http://localhost:3000/todos -H 'Content-Type: application/json' -d '{}'
+```
 
 ## Tests
 
