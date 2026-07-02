@@ -2,16 +2,12 @@ import React from 'react';
 import TodoItem from './TodoItem';
 
 function TodoList({ todos }) {
-  if (!Array.isArray(todos) || todos.length === 0) {
-    return <div className="state empty">No todos yet.</div>;
+  if (!todos || todos.length === 0) {
+    return <div style={{ color: '#888', marginTop: 18 }}>No todos yet &mdash; add your first above!</div>;
   }
-
-  // Sort by createdAt, oldest first
-  const sorted = [...todos].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-
   return (
-    <ul className="todo-list">
-      {sorted.map(todo => (
+    <ul className="todo-list" style={{ listStyle: 'none', padding: 0, marginTop: 10 }}>
+      {todos.map(todo => (
         <TodoItem key={todo.id} todo={todo} />
       ))}
     </ul>
