@@ -40,12 +40,6 @@ function errorHandler(err, req, res, next) {
   res.status(code).json({ error: err.message || 'Internal Server Error' });
 }
 
-// ===== Validation middleware example (used for future endpoints) =====
-function validateRequest(req, res, next) {
-  // This is currently just a no-op stub for future use (POST/PUT, etc).
-  next();
-}
-
 // ===== Health check route =====
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Todo backend is running.' });
@@ -92,6 +86,67 @@ app.post('/todos', (req, res) => {
   todos.push(newTodo);
   // Respond with created resource
   res.status(201).json({ ...newTodo });
+});
+
+// ===== PUT /todos/:id endpoint =====
+// Partial update of a todo (title, description, completed). All fields optional except at least one must be provided.
+app.put('/todos/:id', (req, res) => {
+  const { id } = req.params;
+  const todo = todos.find(t => t.id === id);
+  if (!todo) {
+    return res.status(404).json({ error: 'Todo not found' });
+  }
+
+  // Support PATCH-style: only update provided fields
+  const { title, description, completed } = req.body || {};
+  // If title is provided (even empty!), validate it
+  if (Object.prototype.hasOwnProperty.call(req.body, 'title')) {
+    if (typeof title !== 'string' || title.trim().length === 0) {
+      return res.status(400).json({ error: 'If provided, title must be a non-empty string' });
+    }
+    todo.title = title.trim();
+  }
+
+  // If description is provided
+  if (Object.prototype.hasOwnProperty.call(req.body, 'description')) {
+    if (typeof description !== 'string') {
+      return res.status(400).json({ error: 'If provided, description must be a string' });
+    }
+    todo.description = description;
+  }
+
+  // If completed is provided
+  if (Object.prototype.hasOwnProperty.call(req.body, 'completed')) {
+    if (typeof completed !== 'boolean') {
+      return res.status(400).json({ error: 'If provided, completed must be a boolean' });
+    }
+    todo.completed = completed;
+  }
+
+  // If no updatable field was provided, return error
+  if (
+    !Object.prototype.hasOwnProperty.call(req.body, 'title') &&
+    !Object.prototype.hasOwnProperty.call(req.body, 'description') &&
+    !Object.prototype.hasOwnProperty.call(req.body, 'completed')
+  ) {
+    return res.status(400).json({ error: 'Request body must include at least one field to update (title, description, completed)' });
+  }
+
+  res.status(200).json({ ...todo });
+});
+
+// ===== DELETE /todos/:id endpoint =====
+// Deletes a todo by ID. Returns status or 404 if not found.
+app.delete('/todos/:id', (req, res) => {
+  const { id } = req.params;
+  const idx = todos.findIndex(t => t.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Todo not found' });
+  }
+  // Remove the todo
+  const [removedTodo] = todos.splice(idx, 1);
+  res.status(204).send();
+  // Optionally, could return status: res.json({ message: 'Deleted', id })
 });
 
 // ===== Attach global error handler (always last) =====
