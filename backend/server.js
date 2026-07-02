@@ -1,19 +1,60 @@
-// Minimal Express server for in-memory todo API scaffold
+// Express backend for in-memory todo API
+// Data is stored strictly in process memory and resets on server restart.
 import express from 'express';
 import cors from 'cors';
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
+// ===== In-memory storage for todos =====
+// This array is cleared every time the server restarts.
+/**
+ * @typedef {Object} Todo
+ * @property {string} id - Unique string identifier
+ * @property {string} title - Todo title (required)
+ * @property {string} [description] - Optional description
+ * @property {boolean} completed - Completion status
+ * @property {string} createdAt - ISO string of creation timestamp
+ */
+const todos = [];
+
+// ===== Global Express middlewares =====
 app.use(cors());
 app.use(express.json());
 
-// Root route for health check
+// ===== Simple error handler helper =====
+function errorHandler(err, req, res, next) {
+  // eslint-disable-next-line no-console
+  console.error(err);
+  if (res.headersSent) return next(err);
+  const code = err.status || 500;
+  res.status(code).json({ error: err.message || 'Internal Server Error' });
+}
+
+// ===== Validation middleware example (used for future endpoints) =====
+function validateRequest(req, res, next) {
+  // This is currently just a no-op stub for future use (POST/PUT, etc).
+  next();
+}
+
+// ===== Health check route =====
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Todo backend is running.' });
 });
 
+// ===== GET /todos endpoint =====
+// Returns all current todos. Data is reset on server restart.
+app.get('/todos', (req, res) => {
+  // Respond with a deep copy to avoid accidental mutations from callers
+  res.json(todos.map(todo => ({ ...todo })));
+});
+
+// ===== Attach global error handler (always last) =====
+app.use(errorHandler);
+
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`🚀 Backend running on http://localhost:${PORT}`);
+  // eslint-disable-next-line no-console
+  console.log('⚠️  All todos are stored in-memory and will RESET if the server restarts.');
 });
