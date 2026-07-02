@@ -1,0 +1,13 @@
+{
+  "build": {
+    "builder": "nixpacks"
+  },
+  "start": "npm start",
+  "envs": [
+    {
+      "name": "PORT",
+      "required": false,
+      "description": "Port to run the Express server on (default: 3000)."
+    }
+  ]
+}
