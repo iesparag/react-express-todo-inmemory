@@ -42,6 +42,32 @@ Invalid/no title returns 400:
 curl -X POST http://localhost:3000/todos -H 'Content-Type: application/json' -d '{}'
 ```
 
+## Usage Note
+
+:warning: **Data is stored in-memory only and will reset if the backend server restarts.** This is intended for demo/testing purposes.
+
 ## Tests
 
 _No test files yet. To add Node.js tests, use the `node --test` runner and place `.test.js` files as needed._
+
+## Deployment
+
+### Deploy on Railway (One-Click)
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
+
+#### Steps
+1. Click the button and select your GitHub account.
+2. Point to this repo: https://github.com/iesparag/react-express-todo-inmemory
+3. For **Project Root**, select `backend/`.
+4. Set environment variables if needed:
+   - `PORT` (optional)
+5. Deploy!
+
+**Backend API URL Example:** After deployment, your API runs at `https://<your-railway-subdomain>.up.railway.app`
+
+### Environment Variables
+
+- `PORT` (optional): The port to run the server on. Default is 3000.
+
+---
