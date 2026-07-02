@@ -1,59 +1,54 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import AddTodoForm from './components/AddTodoForm';
 import TodoList from './components/TodoList';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function App() {
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
 
+  // Fetch todos on mount
   useEffect(() => {
-    let isMounted = true;
     async function fetchTodos() {
       setLoading(true);
-      setError(null);
+      setFetchError(null);
       try {
-        const resp = await fetch(`${API_BASE_URL}/todos`);
-        if (!resp.ok) {
-          throw new Error(`Server returned ${resp.status}`);
-        }
-        const data = await resp.json();
-        if (isMounted) {
-          setTodos(data);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError('Failed to load todos. Please try refreshing.');
-        }
+        const res = await fetch(`${API_BASE}/todos`);
+        if (!res.ok) throw new Error('Server error');
+        const data = await res.json();
+        setTodos(data);
+      } catch (e) {
+        setFetchError('Failed to load todos. The backend may be down.');
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     }
     fetchTodos();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
+  // Handler to add new todo to state when successfully created via AddTodoForm
+  function handleAddTodo(newTodo) {
+    setTodos(todos => [...todos, newTodo]);
+  }
+
   return (
-    <div className="container">
-      <header>
-        <h1>In-memory Todo App</h1>
-      </header>
-      <main>
-        {loading ? (
-          <div className="state loading">Loading todos...</div>
-        ) : error ? (
-          <div className="state error">{error}</div>
-        ) : (
-          <TodoList todos={todos} />
-        )}
-        <div className="note" data-testid="persistence-note">
-          Data is <b>temporary</b> and will reset if the server restarts.
-        </div>
-      </main>
+    <div className="main-container" style={{ maxWidth: 520, margin: '35px auto', padding: 24, background: '#fff', borderRadius: 10, boxShadow: '0 2px 16px rgba(0,0,0,0.04)' }}>
+      <h1 className="app-title" style={{ marginBottom: 12, fontWeight: 700, fontSize: 28 }}>
+        In-memory Todo App
+      </h1>
+      <p style={{ fontSize: 14, marginBottom: 32, color: '#555' }}>
+        Simple todos — <span style={{ fontWeight: 500 }}>Data is temporary and will reset if the server restarts.</span>
+      </p>
+      <AddTodoForm onAdd={handleAddTodo} />
+      {loading ? (
+        <div style={{ marginTop: 32, textAlign: 'center', color: '#777' }}>Loading todos...</div>
+      ) : fetchError ? (
+        <div role="alert" style={{ color: 'red', marginTop: 32 }}>{fetchError}</div>
+      ) : (
+        <TodoList todos={todos} />
+      )}
     </div>
   );
 }
